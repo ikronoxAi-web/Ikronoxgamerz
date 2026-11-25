@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ikronox Gaming — Play Free Instant Online Browser Games (No Download)</title>
+  <meta name="description" content="Play free instant HTML5 browser games on Ikronox Gaming. Enjoy smooth casual, arcade, and puzzle games directly on mobile or desktop with new games added regularly." />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #0A0A0A; color: #FFFFFF; min-height: 100vh; }
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(10, 10, 10, 0.92); backdrop-filter: blur(10px);
+      border-bottom: 1px solid #222; padding: 14px 20px;
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+    }
+    .brand { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.5px; }
+    .brand span { color: #FFD500; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    input, select {
+      background: #161616; color: #fff; border: 1px solid #333;
+      padding: 8px 12px; border-radius: 10px; font-size: 0.95rem; outline: none;
+    }
+    input:focus, select:focus { border-color: #7A00FF; }
+    main { max-width: 1200px; margin: 24px auto; padding: 0 18px 40px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      background: #151515; border: 1px solid #262626; border-radius: 16px;
+      overflow: hidden; cursor: pointer; transition: transform 0.16s ease, border-color 0.16s ease;
+    }
+    .card:hover { transform: translateY(-4px); border-color: #FF477E; }
+    .thumb {
+      height: 135px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 1.15rem; padding: 12px; text-align: center;
+      position: relative;
+    }
+    .badge {
+      position: absolute; top: 10px; right: 10px;
+      background: #FFD500; color: #0A0A0A; font-size: 0.7rem; font-weight: 800;
+      padding: 3px 8px; border-radius: 999px;
+    }
+    .card-body { padding: 12px; }
+    .card-title { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .card-cat { font-size: 0.8rem; color: #B8B8B8; }
+
+    .modal {
+      display: none; position: fixed; inset: 0; z-index: 50;
+      background: rgba(0, 0, 0, 0.88); padding: 16px;
+      align-items: center; justify-content: center;
+    }
+    .modal.open { display: flex; }
+    .player-box {
+      width: 100%; max-width: 920px; background: #141414;
+      border: 1px solid #2c2c2c; border-radius: 16px; overflow: hidden;
+    }
+    .player-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; background: #1c1c1c; border-bottom: 1px solid #2c2c2c;
+    }
+    .btn {
+      background: #FF477E; color: #fff; border: none; padding: 7px 12px;
+      border-radius: 8px; font-weight: 700; cursor: pointer; margin-left: 8px;
+    }
+    .btn.secondary { background: #2c2c2c; }
+    iframe { width: 100%; height: 520px; border: 0; display: block; background: #000; }
+    @media (max-width: 600px) { iframe { height: 380px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">IKRONOX <span>GAMES</span></div>
+    <div class="controls">
+      <input id="searchInput" type="search" placeholder="Search games..." />
+      <select id="categoryFilter">
+        <option value="ALL">All Categories</option>
+        <option value="Arcade">Arcade</option>
+      </select>
+    </div>
+  </header>
+
+  <main>
+    <div id="gamesGrid" class="grid"></div>
+  </main>
+
+  <div id="gameModal" class="modal">
+    <div class="player-box" id="playerBox">
+      <div class="player-bar">
+        <strong id="modalTitle">Game</strong>
+        <div>
+          <button class="btn secondary" id="fullscreenBtn">Fullscreen</button>
+          <button class="btn" id="closeBtn">Close</button>
+        </div>
+      </div>
+      <iframe id="gameFrame" allow="autoplay; fullscreen"></iframe>
+    </div>
+  </div>
+
+  <script>
+    let allGames = [];
+    const grid = document.getElementById("gamesGrid");
+    const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const modal = document.getElementById("gameModal");
+    const playerBox = document.getElementById("playerBox");
+    const gameFrame = document.getElementById("gameFrame");
+    const modalTitle = document.getElementById("modalTitle");
+
+    function renderGames() {
+      const q = searchInput.value.trim().toLowerCase();
+      const cat = categoryFilter.value;
+      const filtered = allGames.filter(g =>
+        (cat === "ALL" || g.category === cat) &&
+        g.title.toLowerCase().includes(q)
+      );
+
+      grid.innerHTML = filtered.map(g => `
+        <div class="card" onclick="openGame('${g.url}', '${g.title.replace(/'/g, "\\'")}')">
+          <div class="thumb" style="background: linear-gradient(135deg, ${g.accent || '#7A00FF'}, #1f1f1f);">
+            ${g.tag ? `<span class="badge">${g.tag}</span>` : ""}
+            <div>${g.title}</div>
+          </div>
+          <div class="card-body">
+            <div class="card-title">${g.title}</div>
+            <div class="card-cat">${g.category}</div>
+          </div>
+        </div>
+      `).join("") || `<p>No games found.</p>`;
+    }
+
+    function openGame(url, title) {
+      modalTitle.textContent = title;
+      gameFrame.src = url;
+      modal.classList.add("open");
+    }
+
+    document.getElementById("closeBtn").onclick = () => {
+      modal.classList.remove("open");
+      gameFrame.src = "";
+    };
+
+    document.getElementById("fullscreenBtn").onclick = () => {
+      if (playerBox.requestFullscreen) playerBox.requestFullscreen();
+    };
+
+    searchInput.oninput = renderGames;
+    categoryFilter.onchange = renderGames;
+
+    fetch("./games.json")
+      .then(r => r.json())
+      .then(data => {
+        allGames = data;
+        const cats = [...new Set(data.map(x => x.category))];
+        categoryFilter.innerHTML = `<option value="ALL">All Categories</option>` +
+          cats.map(c => `<option value="${c}">${c}</option>`).join("");
+        renderGames();
+      })
+      .catch(() => {
+        grid.innerHTML = "<p>Could not load games.json</p>";
+      });
+  </script>
+</body>
+</html>
