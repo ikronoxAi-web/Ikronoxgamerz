@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Ikronox Gaming — Play Free Instant Online Browser Games (No Download)</title>
   <meta name="description" content="Play free instant HTML5 browser games on Ikronox Gaming. Enjoy smooth casual, arcade, and puzzle games directly on mobile or desktop with new games added regularly." />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: #0A0A0A; color: #FFFFFF; min-height: 100vh; }
+    body { background: #0A0A0A; color: #FFFFFF; min-height: 100dvh; }
     header {
       position: sticky; top: 0; z-index: 20;
       background: rgba(10, 10, 10, 0.92); backdrop-filter: blur(10px);
@@ -25,7 +25,7 @@
     main { max-width: 1200px; margin: 24px auto; padding: 0 18px 40px; }
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
       gap: 16px;
     }
     .card {
@@ -49,25 +49,36 @@
 
     .modal {
       display: none; position: fixed; inset: 0; z-index: 50;
-      background: rgba(0, 0, 0, 0.88); padding: 16px;
+      background: rgba(0, 0, 0, 0.92); padding: 16px;
       align-items: center; justify-content: center;
     }
     .modal.open { display: flex; }
     .player-box {
       width: 100%; max-width: 920px; background: #141414;
       border: 1px solid #2c2c2c; border-radius: 16px; overflow: hidden;
+      display: flex; flex-direction: column;
     }
     .player-bar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 16px; background: #1c1c1c; border-bottom: 1px solid #2c2c2c;
+      flex-shrink: 0;
     }
     .btn {
       background: #FF477E; color: #fff; border: none; padding: 7px 12px;
       border-radius: 8px; font-weight: 700; cursor: pointer; margin-left: 8px;
     }
     .btn.secondary { background: #2c2c2c; }
-    iframe { width: 100%; height: 520px; border: 0; display: block; background: #000; }
-    @media (max-width: 600px) { iframe { height: 380px; } }
+    iframe { width: 100%; height: 520px; border: 0; display: block; background: #000; flex: 1; }
+
+    @media (max-width: 640px) {
+      .modal { padding: 0; }
+      .player-box {
+        width: 100vw; max-width: none; height: 100dvh; max-height: 100dvh;
+        border-radius: 0; border: none;
+      }
+      .player-bar { padding: 10px 14px; }
+      iframe { width: 100%; height: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -135,15 +146,28 @@
       modalTitle.textContent = title;
       gameFrame.src = url;
       modal.classList.add("open");
+      document.body.style.overflow = "hidden";
     }
 
-    document.getElementById("closeBtn").onclick = () => {
+    async function closeModal() {
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch (_) {}
+      }
       modal.classList.remove("open");
       gameFrame.src = "";
-    };
+      document.body.style.overflow = "";
+    }
 
-    document.getElementById("fullscreenBtn").onclick = () => {
-      if (playerBox.requestFullscreen) playerBox.requestFullscreen();
+    document.getElementById("closeBtn").onclick = closeModal;
+
+    document.getElementById("fullscreenBtn").onclick = async () => {
+      try {
+        if (!document.fullscreenElement && playerBox.requestFullscreen) {
+          await playerBox.requestFullscreen();
+        } else if (document.fullscreenElement && document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      } catch (_) {}
     };
 
     searchInput.oninput = renderGames;
